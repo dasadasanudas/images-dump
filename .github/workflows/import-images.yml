@@ -1,0 +1,27 @@
+name: Import images
+on:
+  push:
+    paths:
+      - "incoming/*.zip"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack image batches
+        run: |
+          mkdir -p images
+          for f in incoming/*.zip; do
+            [ -f "$f" ] || continue
+            unzip -n "$f" -d images
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add images
+          if ! git diff --cached --quiet; then
+            git commit -m "Import stock image batch"
+            git push
+          fi
